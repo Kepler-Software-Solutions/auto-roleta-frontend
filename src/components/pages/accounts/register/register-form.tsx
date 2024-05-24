@@ -1,18 +1,18 @@
 'use client'
 import { useState } from 'react'
 
-import { z } from 'zod'
-import { Lock, Message } from 'react-iconly'
-import { useForm } from 'react-hook-form'
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { signIn } from 'next-auth/react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { Lock, Message } from 'react-iconly'
+import { z } from 'zod'
 
-import { toast } from '@/config/toast'
-import { FacebookPixel } from '@/components/shared/facebook-pixel'
 import { Button, Input } from '@/components/shared'
+import { FacebookPixel } from '@/components/shared/facebook-pixel'
+import { toast } from '@/config/toast'
 
 const RegisterSchema = z
   .object({
@@ -30,6 +30,9 @@ const RegisterSchema = z
 
 export function RegisterForm() {
   const [passwordIsVisible, setPasswordIsVisible] = useState(false)
+
+  const searchParams = useSearchParams()
+  const affiliateId = searchParams.get('affiliateId')
 
   const router = useRouter()
 
@@ -56,6 +59,7 @@ export function RegisterForm() {
         name: data.email.split('@')[0],
         email: data.email,
         password: data.password,
+        affiliateId: affiliateId !== null ? affiliateId : undefined,
       }
 
       const user = await fetch('/api/users', {

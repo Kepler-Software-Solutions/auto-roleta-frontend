@@ -1,15 +1,33 @@
-import { add } from 'date-fns'
 import { hash } from 'bcrypt'
+import { add } from 'date-fns'
+import { z } from 'zod'
 
 import { prisma } from '@/config/prisma'
 
+const requestSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  password: z.string(),
+  affiliateId: z.string().optional(),
+})
+
 export async function POST(request: Request) {
-  const { name, email, password } = await request.json()
+  const body = await request.json()
+
+  const payload = requestSchema.safeParse(body)
+
+  if (!payload.success) {
+    return Response.json(payload.error, {
+      status: 400,
+    })
+  }
+
+  const { data } = payload
 
   const [userFindedByEmail] = await Promise.all([
     prisma.user.findUnique({
       where: {
-        email,
+        email: data.email,
       },
     }),
   ])
@@ -20,11 +38,27 @@ export async function POST(request: Request) {
     })
   }
 
+  if (data.affiliateId) {
+    const affiliate = await prisma.affiliate.findFirst({
+      where: {
+        affiliateId: data.affiliateId,
+      },
+    })
+
+    if (!affiliate) {
+      await prisma.affiliate.create({
+        data: {
+          affiliateId: data.affiliateId,
+          balance: 0,
+        },
+      })
+    }
+  }
+
   const user = await prisma.user.create({
     data: {
-      name,
-      email,
-      password: await hash(password, 8),
+      ...data,
+      password: await hash(data.password, 8),
       license: 'trial',
       licensedUntil: add(new Date(), {
         days: 1 * 30,

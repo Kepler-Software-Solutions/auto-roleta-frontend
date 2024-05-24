@@ -49,13 +49,24 @@ model User {
   bets          Bet[]
   balanceTracks BalanceTrack[]
 
-  license License?
-  recurrency Recurrency?
+  license       License?
+  recurrency    Recurrency?
   licensedUntil DateTime?
+
+  Affiliate   Affiliate? @relation(fields: [affiliateId], references: [affiliateId])
+  affiliateId String?
 
   createdAt DateTime @default(now())
 
   @@map("users")
+}
+
+model Affiliate {
+  affiliateId String @id
+  balance     Int
+  users       User[]
+
+  @@map("affiliates")
 }
 
 model Credential {
@@ -76,7 +87,7 @@ enum Color {
 }
 
 model Config {
-  userId     String @id
+  userId String @id
 
   strategy String
   entry    Int
@@ -84,7 +95,7 @@ model Config {
   stopWin  Int
   stopLoss Int
 
-  user     User     @relation(fields: [userId], references: [userId])
+  user User @relation(fields: [userId], references: [userId])
 
   @@map("configs")
 }

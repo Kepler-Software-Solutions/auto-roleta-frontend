@@ -1,8 +1,8 @@
-import { z } from 'zod'
 import { add } from 'date-fns'
+import { z } from 'zod'
 
-import { pricing } from '@/constants/pricing'
 import { prisma } from '@/config/prisma'
+import { pricing } from '@/constants/pricing'
 
 const SubscribeSchema = z.object({
   data: z.object({
@@ -47,6 +47,17 @@ export async function POST(request: Request) {
   if (!user) {
     return Response.json('User not found', {
       status: 404,
+    })
+  }
+
+  if (user.affiliateId) {
+    const affiliate = await prisma.affiliate.findFirst({
+      where: { affiliateId: user.affiliateId },
+    })
+
+    await prisma.affiliate.update({
+      where: { affiliateId: user.affiliateId },
+      data: { balance: Number(affiliate!.balance + amount * 0.6) },
     })
   }
 
